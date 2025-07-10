@@ -2,18 +2,12 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "waseem775/laravel-task-app"
-        IMAGE_TAG = "latest"
+        IMAGE_NAME = 'laravel-notes'
+        IMAGE_TAG = 'latest'
     }
 
     stages {
-        stage('Clone repository') {
-            steps {
-                checkout scm
-            }
-        }
-
-        stage('Build Docker image') {
+        stage('Build Docker Image') {
             steps {
                 sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
             }
@@ -24,7 +18,10 @@ pipeline {
                 sh '''
                     docker stop laravel-notes || true
                     docker rm laravel-notes || true
-                    docker run -d -p 8000:80 --name laravel-notes $IMAGE_NAME:$IMAGE_TAG
+                    docker run -d -p 8000:80 \
+                        -v $(pwd)/storage:/var/www/html/storage \
+                        -v $(pwd)/.env:/var/www/html/.env \
+                        --name laravel-notes $IMAGE_NAME:$IMAGE_TAG
                 '''
             }
         }
@@ -32,7 +29,7 @@ pipeline {
 
     post {
         always {
-            echo 'Pipeline execution complete.'
+            echo '✅ Pipeline execution complete.'
         }
     }
 }
